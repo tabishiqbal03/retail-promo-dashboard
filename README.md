@@ -1,181 +1,78 @@
-# Retail Promotion Impact Analysis & Sales Forecasting Dashboard
+# Retail Promo Dashboard
 
-An end-to-end data science project analysing how promotions, holidays, and store-level factors drive daily sales across Rossmann retail stores — with an interactive dashboard for non-technical stakeholders to simulate promotional scenarios.
+This project analyses retail sales patterns using the Rossmann Store Sales dataset and builds machine learning models to predict daily store sales. The aim was to explore how promotional activity and historical sales behaviour relate to future sales, and then present the results through a simple Streamlit dashboard.
+
+I trained and compared three models: Linear Regression, Random Forest, and XGBoost. The best-performing model was XGBoost, which achieved an RMSPE of **0.1304**, compared with **0.2277** for the Linear Regression baseline. This represents a **42.7% reduction in RMSPE** over the baseline model.
+
+The project was built as an end-to-end workflow covering data preparation, feature engineering, model training, evaluation, and dashboard development.
 
 ---
 
-## Overview
+## Project Overview
 
-Retail promotions are expensive. Before committing budget to a campaign, businesses want to know: *how much will this actually lift sales, and does that vary by store type, day of week, or time of year?*
+The project uses the Rossmann retail dataset to predict daily sales at store level. Rather than using a random train-test split, I used a time-based split so that the evaluation would better reflect a real forecasting setting. I also created lag and rolling features to help the models capture short-term sales patterns over time.
 
-This project answers those questions using the [Rossmann Store Sales dataset](https://www.kaggle.com/competitions/rossmann-store-sales), which contains ~1 million daily sales records across 1,115 German stores over three years.
+The dashboard was built to make the results easier to explore, including model comparison, sales trend analysis, and simple promotion-based scenario testing.
 
-**Three models were trained and compared:**
-- Linear Regression — interpretable baseline
-- Random Forest — captures non-linear interactions
-- XGBoost — gradient boosting for best predictive performance
+---
+
+## Models Used
+
+The following models were trained and evaluated:
+
+- Linear Regression
+- Random Forest Regressor
+- XGBoost Regressor
 
 ---
 
 ## Results
 
-| Model              |   MAE (€) |  RMSE (€) | RMSPE  |
-|--------------------|----------:|----------:|-------:|
-| Linear Regression  |  *update after running* | — | —  |
-| Random Forest      |  *update after running* | — | —  |
-| XGBoost            |  *update after running* | — | —  |
+| Model | MAE | RMSE | RMSPE |
+|------|----:|-----:|------:|
+| Linear Regression | 1,058 | 2,062 | 0.2277 |
+| Random Forest | 665 | 954 | 0.1407 |
+| XGBoost | 631 | 888 | 0.1304 |
 
-*Evaluated on a time-based holdout set (June 2015 onwards) to simulate real forecasting conditions.*
+**Best model:** XGBoost  
+**Improvement over baseline:** 42.7% reduction in RMSPE compared with Linear Regression
 
 ---
 
-## Key Findings
+## What the Results Show
 
-- Promotions lift average daily sales by approximately **X%** overall, but the effect varies significantly by store type — Type B stores show the highest uplift, Type D the lowest
-- **Rolling sales history** (7-day and 30-day averages) is the most predictive feature, accounting for the majority of feature importance in both tree-based models
-- Promotional uplift is strongest mid-week (Tuesday–Thursday), with diminishing returns at weekends when baseline footfall is already high
-- XGBoost outperforms the linear baseline by **X% reduction in RMSPE** — demonstrating that the relationship between promotions and sales is genuinely non-linear
+The tree-based models performed much better than Linear Regression, which suggests that the relationship between sales and the input features was not purely linear. Random Forest gave a strong improvement over the baseline, but XGBoost achieved the best overall performance across all three metrics.
+
+The gap between the baseline and the stronger models shows that feature engineering and non-linear modelling added clear value to the forecasting task.
+
+---
+
+## Method
+
+The overall workflow was:
+
+- Load and clean the Rossmann sales data
+- Create time-based features
+- Engineer lag and rolling-window features
+- Split the data using time rather than random sampling
+- Train and compare multiple regression models
+- Evaluate using MAE, RMSE, and RMSPE
+- Save model outputs for use in a Streamlit dashboard
+
+### Why RMSPE?
+
+RMSPE was used as an important evaluation metric because percentage-based error is useful in retail forecasting, especially when sales values vary across different stores and time periods.
 
 ---
 
 ## Project Structure
 
-```
+```text
 retail-promo-dashboard/
 │
-├── app.py              # Streamlit dashboard (4 pages)
-├── train.py            # Model training and evaluation script
-├── utils.py            # Feature engineering, metrics, and plotting helpers
-├── requirements.txt    # Python dependencies
-│
-├── data/               # Download from Kaggle (not tracked in git)
-│   ├── train.csv
-│   └── store.csv
-│
-├── models/             # Generated by train.py (not tracked in git)
-│   ├── linear_regression.pkl
-│   ├── random_forest.pkl
-│   ├── xgboost.pkl
-│   ├── scaler.pkl
-│   ├── feature_cols.json
-│   └── results.json
-│
-└── plots/              # Generated by train.py (not tracked in git)
-    ├── feature_importance.png
-    └── rf_predictions_vs_actual.png
-```
-
----
-
-## Setup & Running Locally
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/YOUR_USERNAME/retail-promo-dashboard.git
-cd retail-promo-dashboard
-```
-
-### 2. Create a virtual environment (recommended)
-
-```bash
-python -m venv venv
-source venv/bin/activate        # Mac/Linux
-venv\Scripts\activate           # Windows
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Download the data
-
-Go to [Kaggle — Rossmann Store Sales](https://www.kaggle.com/competitions/rossmann-store-sales/data) and download `train.csv` and `store.csv`. Place both files in a `data/` folder:
-
-```
-retail-promo-dashboard/
-└── data/
-    ├── train.csv
-    └── store.csv
-```
-
-### 5. Train the models
-
-```bash
-python train.py
-```
-
-This takes approximately 3–5 minutes. It will print a results summary when done and save everything to the `models/` folder.
-
-### 6. Launch the dashboard
-
-```bash
-streamlit run app.py
-```
-
-The app will open in your browser at `http://localhost:8501`.
-
----
-
-## Dashboard Pages
-
-| Page | Description |
-|------|-------------|
-| **Overview** | Sales trends, store comparisons, and a monthly heatmap |
-| **Promotion Analysis** | Uplift by store type, day of week, and assortment level |
-| **Model Performance** | Side-by-side metric comparison and feature importance chart |
-| **Scenario Simulator** | Interactive tool to predict sales uplift for custom scenarios |
-
----
-
-## Technical Approach
-
-### Feature Engineering
-
-Three categories of features were engineered from the raw data:
-
-- **Calendar features** — day of week, month, quarter, weekend flag, month start/end
-- **Lag features** — sales from 1, 7, and 14 days prior (per store, to avoid data leakage)
-- **Rolling statistics** — 7-day and 30-day rolling mean and standard deviation (per store)
-
-### Modelling
-
-The target variable (daily sales) was log-transformed before training to handle the right-skewed distribution. Predictions are back-transformed with `expm1` for evaluation and display.
-
-A **time-based train/test split** was used rather than a random split — all data before June 2015 was used for training, and everything from June 2015 onwards was the holdout test set. This replicates how the model would actually be used in production (you always forecast into the future, not randomly sampled past dates).
-
-### Evaluation
-
-Models are compared on:
-- **MAE** — average absolute error in euros, easy to communicate to stakeholders
-- **RMSE** — penalises large errors more heavily than MAE
-- **RMSPE** — the official Rossmann competition metric; scale-independent so it's fair across stores with very different sales volumes
-
----
-
-## Technologies
-
-- **Python 3.11**
-- **pandas** — data manipulation
-- **scikit-learn** — Linear Regression, Random Forest, preprocessing
-- **XGBoost** — gradient boosting
-- **Streamlit** — interactive dashboard
-- **matplotlib / seaborn** — visualisations
-
----
-
-## Data Source
-
-Rossmann Store Sales — [Kaggle Competition](https://www.kaggle.com/competitions/rossmann-store-sales)
-
-The dataset contains daily sales data for 1,115 Rossmann drug stores in Germany. Features include store type, assortment level, competition distance, promotion flags, school and public holidays.
-
----
-
-## Limitations & Future Work
-
-- Lag features require historical data for each store — the model cannot forecast for brand new stores with no sales history (cold-start problem)
-- Promotion type and duration are not distinguished — a one-day flash sale and a two-week campaign are treated identically
-- Future improvements could include store-level SHAP explanations to show *why* a specific store has higher promotional sensitivity, and a Prophet model for longer-range seasonal decomposition
+├── app.py
+├── train.py
+├── utils.py
+├── models/
+├── README.md
+└── requirements.txt
